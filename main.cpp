@@ -18,6 +18,13 @@ private:
     int player;
     bool eat = false;
 public:
+    void gotoxy(int xpos, int ypos)
+    {
+        COORD scrn;
+        HANDLE hOuput = GetStdHandle(STD_OUTPUT_HANDLE);
+        scrn.X = xpos; scrn.Y = ypos;
+        SetConsoleCursorPosition(hOuput,scrn);
+    }
     void Init(){
         len = 1;
         player = 4;
@@ -30,21 +37,26 @@ public:
     void move(char key){
         Body head = body.front();
         if(!eat){
+            Body tail = body.back();
+            gotoxy(tail.x + Left_Edge, tail.y);
+            cout << " ";
             body.pop_back();
         }
-        body.push_front(head);
         if(key == 'a'){
-            --body[0].x;
+            --head.x;
         }
         else if(key == 'd'){
-            ++body[0].x;
+            ++head.x;
         }
         else if(key == 'w'){
-            --body[0].y;
+            --head.y;
         }
         else if(key == 's'){
-            ++body[0].y;
+            ++head.y;
         }
+        gotoxy(head.x + Left_Edge, head.y);
+        cout << "S";
+        body.push_front(head);
         eat = false;
     }
     class Body{
@@ -80,10 +92,20 @@ public:
 
 class Food{
 private:
-    bool flag = true;
+    bool flag;
 public:
     int x;
     int y;
+    void gotoxy(int xpos, int ypos)
+    {
+        COORD scrn;
+        HANDLE hOuput = GetStdHandle(STD_OUTPUT_HANDLE);
+        scrn.X = xpos; scrn.Y = ypos;
+        SetConsoleCursorPosition(hOuput,scrn);
+    }
+    void InitFood(){
+        flag = true;
+    }
     void CreateFood(){
         if(flag){
             x = rand() % (Map_Width-2) + 1;
@@ -102,7 +124,11 @@ public:
                 }
             }
             if(CreateError) flag = true;
-            else flag = false;
+            else {
+                gotoxy(x + Left_Edge, y);
+                cout << "f";
+                flag = false;
+            }
         }
     }
     void EatFood(){
@@ -119,11 +145,21 @@ public:
 
 class Bomb{
 private:
-    bool flag = true;
+    bool flag;
 public:
     int x;
     int y;
-    void Createbomb(){
+    void gotoxy(int xpos, int ypos)
+    {
+        COORD scrn;
+        HANDLE hOuput = GetStdHandle(STD_OUTPUT_HANDLE);
+        scrn.X = xpos; scrn.Y = ypos;
+        SetConsoleCursorPosition(hOuput,scrn);
+    }
+    void InitBomb(){
+        flag = true;
+    }
+    void CreateBomb(){
         if(flag){
             x = rand() % (Map_Width-2) + 1;
             y = rand() % (Map_Height-2) + 1;
@@ -141,7 +177,11 @@ public:
                 }
             }
             if(CreateError) flag =true;
-            else flag = false;
+            else {
+                gotoxy(x + Left_Edge, y);
+                cout << "B";
+                flag = false;
+            }
         }
     }
     void Eatbomb(){
@@ -238,6 +278,7 @@ int main(){
 }
 
 void state1(){
+    food.InitFood();
     while(true){
         food.CreateFood();
         if(_kbhit()){
@@ -254,8 +295,8 @@ void state1(){
             break;
         }
         sec = clock();
-        if(Key == 'w' || Key == 's') Sleep(10*snake.length());
-        else Sleep(10*snake.length()/5);
+        if(Key == 'w' || Key == 's') Sleep(50 + snake.length()*10);
+        else Sleep((50 + snake.length()*10)/2);
         if(sec >= gametime){
             gametime += 1000;
             score += (rand() % 100 + 10)*snake.length();
@@ -277,10 +318,14 @@ void state1(){
 
 void state2(){
     InitScene();
+    food.InitFood();
+    for(int i = 0; i < 3; ++i){
+        bomb[i].InitBomb();
+    }
     while(true){
         food.CreateFood();
         for(int i = 0; i < 3; ++i){
-            bomb[i].Createbomb();
+            bomb[i].CreateBomb();
         }
         if(_kbhit()){
             Key = _getch();
@@ -297,8 +342,8 @@ void state2(){
             break;
         }
         sec = clock();
-        if(Key == 'w' || Key == 's') Sleep(10*snake.length());
-        else Sleep(10*snake.length()/5);
+        if(Key == 'w' || Key == 's') Sleep(50 + snake.length()*10);
+        else Sleep((50 + snake.length()*10)/2);
         if(sec >= gametime){
             gametime += 1000;
             score += (rand() % 100 + 10)*snake.length();
@@ -562,38 +607,49 @@ void InitScene(){
 
 void show(){
     SetColor();
-    for(int i = 1; i < Map_Height; ++i){
-        gotoxy(Left_Edge, i);
-        for(int j = 1; j < Map_Width; ++j){
-            if(food.y == i && food.x == j && food.exist()){
-                cout << "f";
-                continue;
-            }
-            if(stage1Clear){
-                bool haveBomb = false;
-                for(int k = 0; k < 3; ++k){
-                    if(bomb[k].y == i && bomb[k].x == j && bomb[k].exist()){
-                        cout << "B";
-                        haveBomb = true;
-                        break;
-                    }
-                }
-                if(haveBomb) continue;
-            }
-            for(int c = 0; c < snake.length(); ++c){
-                if(snake.body[c].y == i && snake.body[c].x == j){
-                    cout << "S";
-                    break;
-                }
-                if(c == snake.length()-1) cout << " ";
-            }
-        }
-        // if(i == 1) cout << "score: " << snake.length();
-        // else if(i == 3) cout << "Hp: 4";
-        // else if(i == 5) cout << "Bomb: 3";
-        // else if(i == 17) cout << "東方";
-        // else if(i == 19) cout << "貪食蛇";
-    }
+    // if(stage1Clear){
+    //     for(int i = 0; i < 3; ++i){
+    //         gotoxy(bomb[i].x, bomb[i].y);
+    //         cout << "B";
+    //     }
+    // }
+    // for(int i = 0; i < snake.length(); ++i){
+    //     gotoxy(snake.body[i].x, snake.body[i].y);
+    //     cout << "S";
+    // }
+
+    // for(int i = 1; i < Map_Height; ++i){
+    //     gotoxy(Left_Edge, i);
+    //     for(int j = 1; j < Map_Width; ++j){
+    //         if(food.y == i && food.x == j && food.exist()){
+    //             cout << "f";
+    //             continue;
+    //         }
+    //         if(stage1Clear){
+    //             bool haveBomb = false;
+    //             for(int k = 0; k < 3; ++k){
+    //                 if(bomb[k].y == i && bomb[k].x == j && bomb[k].exist()){
+    //                     cout << "B";
+    //                     haveBomb = true;
+    //                     break;
+    //                 }
+    //             }
+    //             if(haveBomb) continue;
+    //         }
+    //         for(int c = 0; c < snake.length(); ++c){
+    //             if(snake.body[c].y == i && snake.body[c].x == j){
+    //                 cout << "S";
+    //                 break;
+    //             }
+    //             if(c == snake.length()-1) cout << " ";
+    //         }
+    //     }
+    //     // if(i == 1) cout << "score: " << snake.length();
+    //     // else if(i == 3) cout << "Hp: 4";
+    //     // else if(i == 5) cout << "Bomb: 3";
+    //     // else if(i == 17) cout << "東方";
+    //     // else if(i == 19) cout << "貪食蛇";
+    // }
     gotoxy(Left_Edge + Map_Width + 1, 1);
     SetColor(16);
     cout << "得點: " << score;
@@ -617,4 +673,5 @@ void show(){
     SetColor(16);
     cout << snake.length()*100 << " ";
     
+    SetColor();
 }
