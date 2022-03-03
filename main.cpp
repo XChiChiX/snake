@@ -34,6 +34,9 @@ public:
         body.clear();
         body.push_front(head);
     }
+    int speed(){
+        return (50 + length()*10);
+    }
     void move(char key){
         Body head = body.front();
         if(!eat){
@@ -235,7 +238,7 @@ void HideCursor(){
 
 
 void InitScene();
-void show();
+void update();
 void Instructions();
 void start_UI();
 void die_UI();
@@ -286,7 +289,7 @@ void state1(){
         }
         food.EatFood();
         snake.move(Key);
-        show();
+        update();
         if(snake.die()){
             system("color 0F");
             system("CLS");
@@ -295,13 +298,13 @@ void state1(){
             break;
         }
         sec = clock();
-        if(Key == 'w' || Key == 's') Sleep(50 + snake.length()*10);
-        else Sleep((50 + snake.length()*10)/2);
+        if(Key == 'w' || Key == 's') Sleep(snake.speed());
+        else Sleep(snake.speed()/2);
         if(sec >= gametime){
             gametime += 1000;
             score += (rand() % 100 + 10)*snake.length();
         }
-        if(sec-startTime >= 30000){
+        if(sec-startTime >= 90000){
             stage1Clear = true;
             system("color 0f");
             system("CLS");
@@ -333,7 +336,7 @@ void state2(){
         food.EatFood();
         for(int i = 0; i < 3; ++i) bomb[i].Eatbomb();
         snake.move(Key);
-        show();
+        update();
         if(snake.die()){
             system("color 0F");
             system("CLS");
@@ -342,13 +345,13 @@ void state2(){
             break;
         }
         sec = clock();
-        if(Key == 'w' || Key == 's') Sleep(50 + snake.length()*10);
-        else Sleep((50 + snake.length()*10)/2);
+        if(Key == 'w' || Key == 's') Sleep(snake.speed());
+        else Sleep(snake.speed()/2);
         if(sec >= gametime){
             gametime += 1000;
             score += (rand() % 100 + 10)*snake.length();
         }
-        if(sec-startTime >= 90000){
+        if(sec-startTime >= 180000){
             system("color 0f");
             system("CLS");
             InitScene();
@@ -452,14 +455,6 @@ void start_UI(){
 }
 
 void die_UI(){
-    // for(int i = 0; i < 9; ++i){
-    //     cout << "\n";
-    // }
-    // cout << "          你已經死了!!\n";
-    // cout << "          存活時間: " << t/5 << "秒\n";
-    // for(int i = 0; i < 10; ++i){
-    //     cout << "\n";
-    // }
     gotoxy(Left_Edge + Map_Width/2, 5);
     cout << "你已經死了!!";
     gotoxy(Left_Edge + Map_Width/2, 7);
@@ -602,54 +597,11 @@ void InitScene(){
     cout << "    / |  \\               \\/    ";
     gotoxy(Left_Edge + Map_Width + 20, 29);
     cout << "貪食蛇";
+
     SetColor();
 }
 
-void show(){
-    SetColor();
-    // if(stage1Clear){
-    //     for(int i = 0; i < 3; ++i){
-    //         gotoxy(bomb[i].x, bomb[i].y);
-    //         cout << "B";
-    //     }
-    // }
-    // for(int i = 0; i < snake.length(); ++i){
-    //     gotoxy(snake.body[i].x, snake.body[i].y);
-    //     cout << "S";
-    // }
-
-    // for(int i = 1; i < Map_Height; ++i){
-    //     gotoxy(Left_Edge, i);
-    //     for(int j = 1; j < Map_Width; ++j){
-    //         if(food.y == i && food.x == j && food.exist()){
-    //             cout << "f";
-    //             continue;
-    //         }
-    //         if(stage1Clear){
-    //             bool haveBomb = false;
-    //             for(int k = 0; k < 3; ++k){
-    //                 if(bomb[k].y == i && bomb[k].x == j && bomb[k].exist()){
-    //                     cout << "B";
-    //                     haveBomb = true;
-    //                     break;
-    //                 }
-    //             }
-    //             if(haveBomb) continue;
-    //         }
-    //         for(int c = 0; c < snake.length(); ++c){
-    //             if(snake.body[c].y == i && snake.body[c].x == j){
-    //                 cout << "S";
-    //                 break;
-    //             }
-    //             if(c == snake.length()-1) cout << " ";
-    //         }
-    //     }
-    //     // if(i == 1) cout << "score: " << snake.length();
-    //     // else if(i == 3) cout << "Hp: 4";
-    //     // else if(i == 5) cout << "Bomb: 3";
-    //     // else if(i == 17) cout << "東方";
-    //     // else if(i == 19) cout << "貪食蛇";
-    // }
+void update(){
     gotoxy(Left_Edge + Map_Width + 1, 1);
     SetColor(16);
     cout << "得點: " << score;
