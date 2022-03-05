@@ -14,10 +14,29 @@ class Snake{
 private:
     int x;
     int y;
-    int len;
     int player;
     bool eat = false;
+    class Body{
+    private:
+        int x;
+        int y;
+    public:
+        int xpos(){
+            return x;
+        }
+        int ypos(){
+            return y;
+        }
+        void setxy(int a, int b){
+            x = a;
+            y = b;
+        }
+    };
+    deque<Body> body;
 public:
+    Body GetBody(int i){
+        return body[i];
+    }
     void gotoxy(int xpos, int ypos)
     {
         COORD scrn;
@@ -26,11 +45,9 @@ public:
         SetConsoleCursorPosition(hOuput,scrn);
     }
     void Init(){
-        len = 1;
         player = 4;
         Body head;
-        head.x = 1;
-        head.y = 1;
+        head.setxy(1, 1);
         body.clear();
         body.push_front(head);
     }
@@ -41,33 +58,27 @@ public:
         Body head = body.front();
         if(!eat){
             Body tail = body.back();
-            gotoxy(tail.x + Left_Edge, tail.y);
+            gotoxy(tail.xpos() + Left_Edge, tail.ypos());
             cout << " ";
             body.pop_back();
         }
         if(key == 'a'){
-            --head.x;
+            head.setxy(head.xpos()-1, head.ypos());
         }
         else if(key == 'd'){
-            ++head.x;
+            head.setxy(head.xpos()+1, head.ypos());
         }
         else if(key == 'w'){
-            --head.y;
+            head.setxy(head.xpos(), head.ypos()-1);
         }
         else if(key == 's'){
-            ++head.y;
+            head.setxy(head.xpos(), head.ypos()+1);
         }
-        gotoxy(head.x + Left_Edge, head.y);
+        gotoxy(head.xpos() + Left_Edge, head.ypos());
         cout << "S";
         body.push_front(head);
         eat = false;
     }
-    class Body{
-    public:
-        int x;
-        int y;
-    };
-    deque<Body> body;
     int length(){
         return body.size();
     }
@@ -83,9 +94,9 @@ public:
     bool die(){
         Body head = body.front();
         if(player <= 0) return true;
-        if(head.x < 1 || head.x > Map_Width-1 || head.y < 1 || head.y > Map_Height-1) return true;
+        if(head.xpos() < 1 || head.xpos() > Map_Width-1 || head.ypos() < 1 || head.ypos() > Map_Height-1) return true;
         for(int i = 1; i < body.size(); ++i){
-            if(head.x == body[i].x && head.y == body[i].y){
+            if(head.xpos() == body[i].xpos() && head.ypos() == body[i].ypos()){
                 return true;
             }
         }
@@ -96,9 +107,15 @@ public:
 class Food{
 private:
     bool flag;
-public:
     int x;
     int y;
+public:
+    int xpos(){
+        return x;
+    }
+    int ypos(){
+        return y;
+    }
     void gotoxy(int xpos, int ypos)
     {
         COORD scrn;
@@ -114,14 +131,14 @@ public:
             x = rand() % (Map_Width-2) + 1;
             y = rand() % (Map_Height-2) + 1;
             for(int i = 0; i < snake.length(); ++i){
-                if(x == snake.body[i].x && y == snake.body[i].y){
+                if(x == snake.GetBody(i).xpos() && y == snake.GetBody(i).ypos()){
                     x = rand() % (Map_Width-2) + 1;
                     y = rand() % (Map_Height-2) + 1;
                 }
             }
             bool CreateError = false;
             for(int i = 0; i < snake.length(); ++i){
-                if(x == snake.body[i].x && y == snake.body[i].y){
+                if(x == snake.GetBody(i).xpos() && y == snake.GetBody(i).ypos()){
                     CreateError = true;
                     break;
                 }
@@ -135,7 +152,7 @@ public:
         }
     }
     void EatFood(){
-        if(x == snake.body[0].x && y == snake.body[0].y){
+        if(x == snake.GetBody(0).xpos() && y == snake.GetBody(0).ypos()){
             snake.grow();
             flag = true;
         }
@@ -149,9 +166,15 @@ public:
 class Bomb{
 private:
     bool flag;
-public:
     int x;
     int y;
+public:
+    int xpos(){
+        return x;
+    }
+    int ypos(){
+        return y;
+    }
     void gotoxy(int xpos, int ypos)
     {
         COORD scrn;
@@ -167,14 +190,14 @@ public:
             x = rand() % (Map_Width-2) + 1;
             y = rand() % (Map_Height-2) + 1;
             for(int i = 0; i < snake.length(); ++i){
-                if((x == snake.body[i].x && y == snake.body[i].y) || (x == food.x && y == food.y)){
+                if((x == snake.GetBody(i).xpos() && y == snake.GetBody(i).ypos()) || (x == food.xpos() && y == food.ypos())){
                     x = rand() % (Map_Width-2) + 1;
                     y = rand() % (Map_Height-2) + 1;
                 }
             }
             bool CreateError = false;
             for(int i = 0; i < snake.length(); ++i){
-                if((x == snake.body[i].x && y == snake.body[i].y) || (x == food.x && y == food.y)){
+                if((x == snake.GetBody(i).xpos() && y == snake.GetBody(i).ypos()) || (x == food.xpos() && y == food.ypos())){
                     CreateError = true;
                     break;
                 }
@@ -188,7 +211,7 @@ public:
         }
     }
     void Eatbomb(){
-        if(x == snake.body[0].x && y == snake.body[0].y){
+        if(x == snake.GetBody(0).xpos() && y == snake.GetBody(0).ypos()){
             snake.hurt();
             flag = true;
         }
